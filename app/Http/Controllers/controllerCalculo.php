@@ -7,22 +7,34 @@ use Illuminate\Http\Request;
 class controllerCalculo extends Controller
 {
     public function Calcular(Request $request)
-{
-    $capital = $request->input('capital');
-    $taxa = $request->input('taxa');
-    $periodo = $request->input('periodo');
-    $juros = $taxa / 100;
+    {
+        $nome = $request->input('nome');
+        $capitalinicial = $request->input('valor');
+        $taxaJuros = $request->input('taxa') / 100;
+        $quantidadeParcelas = $request->input('parcelas');
 
-    $dados = array();
+        $dadosParcelas = [];
+        $valorRestante = $capitalinicial;
+        $totalPago = 0;
 
-    for ($i = 1; $i <= $periodo; $i++) {
-        $dados[$i]['mes'] = $i;
-        $dados[$i]['capitalInicial'] = number_format($capital, 2, ',', '.');
-        $dados[$i]['capitalAtualizado'] = number_format($capital + ($capital * $juros), 2, ',', '.');
-        $capital = $capital + ($capital * $juros);
+        for ($i = 1; $i <= $quantidadeParcelas; $i++) {
+            $valorComJuros = $valorRestante * (1 + $taxaJuros);
+            $parcela = $valorComJuros / $quantidadeParcelas;
+            $totalPago += $parcela;
+
+            $dadosParcelas[] = [
+                'parcela' => $i,
+                'valorAtualizado' => round($valorComJuros, 2),
+                'parcelaValor' => round($parcela, 2),
+            ];
+
+            $valorRestante = $valorComJuros - $parcela;
+        }
+
+        return view('resposta', [
+            'nome' => $nome,
+            'dadosParcelas' => $dadosParcelas,
+            'totalPago' => round($totalPago, 2),
+        ]);
     }
-
-    return view('resposta', compact('dados'));
-}
-
 }
